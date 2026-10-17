@@ -1,0 +1,85 @@
+import { initialState } from '../mocks/fixtures';
+
+export const monitor = {
+  ward_code: 'ED',
+  organism: 'Escherichia coli',
+  specimen: 'urine',
+  antibiotic_code: 'CIP',
+  sex: null,
+  age_min: null,
+  age_max: null,
+  dedup_scope: 'selected_cohort',
+};
+export const measurements = {
+  raw_isolates_before_dedup_and_demographics: 30,
+  sex_counts: { F: 15, M: 15 },
+  age_bin_counts: { '18-64': 30 },
+  collection_setting_counts: { outpatient: 30 },
+  organism_mix_counts: { 'Escherichia coli': 30 },
+  hospital_day_3_or_later: 0,
+  hospital_day_1_or_2: 0,
+  timing_unknown: 0,
+  timing_not_applicable: 30,
+};
+export const recent = {
+  start_date: '2026-08-31',
+  end_date_exclusive: '2026-09-28',
+  n_eligible: 30,
+  n_tested: 30,
+  n_s: 21,
+  n_r: 9,
+  n_not_tested: 0,
+  resistance_pct: 30,
+  measurements,
+  coverage: { source_date_span_covers_window: true, source_fully_imported: true },
+};
+export const context = {
+  run_id: initialState.run_id,
+  state_revision: 7,
+  method_version: 'alert-v1',
+  demo_date: '2026-09-27',
+  source_manifest_id: 'source',
+  monitoring_as_of: '2026-09-27',
+  monitor_id: 'ED-CIP',
+  monitor,
+  rule_version: 'resistance-rise-v1',
+  minimum_tested: 30,
+  threshold_pp: 10,
+  confirmation: 'proposed_pending_partner_confirmation',
+  caveats: ['Populations are not independent.'],
+};
+export const analysis = {
+  analysis_id: 'detection',
+  context,
+  evaluation: {
+    status: 'triggered',
+    reason: null,
+    baseline: {
+      ...recent,
+      start_date: '2025-08-31',
+      end_date_exclusive: '2026-08-31',
+      n_s: 24,
+      n_r: 6,
+      resistance_pct: 20,
+    },
+    recent,
+    resistance_change_pp: 10,
+    shared_patients_between_windows: 0,
+  },
+};
+export const record = {
+  alert_id: 'alert1',
+  investigation_id: 'alert1',
+  run_id: initialState.run_id,
+  monitor_id: 'ED-CIP',
+  antibiotic_code: 'CIP',
+  rule_version: 'resistance-rise-v1',
+  status: 'new',
+  last_sufficient_state: 'new',
+  first_trigger_revision: 7,
+  last_trigger_revision: 7,
+  first_trigger_date: '2026-09-27',
+  last_trigger_date: '2026-09-27',
+  original_analysis_id: 'detection',
+  current_analysis_id: 'latest',
+};

@@ -1,0 +1,7 @@
+node_modules
+dist
+test-results
+playwright-report
+public/mockServiceWorker.js
+package-lock.json
+IMPLEMENTATION_PLAN.md

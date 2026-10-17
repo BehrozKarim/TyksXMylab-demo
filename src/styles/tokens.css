@@ -1,0 +1,146 @@
+/* Shared design tokens: one steel-blue accent and cool neutrals. */
+:root {
+  /* Primitives: neutral ramp */
+  --neutral-100: #f5f5f8;
+  --neutral-200: #e7e7ea;
+  --neutral-300: #d4d4d7;
+  --neutral-400: #b7b7ba;
+  --neutral-500: #98989b;
+  --neutral-600: #7a7a7d;
+  --neutral-700: #5d5d60;
+  --neutral-800: #424244;
+  --neutral-900: #2b2b2d;
+  /* Primitives: accent ramp */
+  --accent-100: #eef6ff;
+  --accent-200: #d6ebff;
+  --accent-300: #b5d9fd;
+  --accent-400: #94bce3;
+  --accent-500: #749dc4;
+  --accent-600: #597ea3;
+  --accent-700: #416180;
+  --accent-800: #2c455d;
+  --accent-900: #1d2d3d;
+  --accent: #5980a6;
+  --ink: #1d1f20;
+  --ground: #f2f2f3;
+  --card: #fbfbfc;
+  --white: #ffffff;
+
+  /* Legacy primitive names kept so existing CSS keeps resolving (mapped to the new palette) */
+  --slate-25: #fbfbfc;
+  --slate-50: #f2f2f3;
+  --slate-100: #e9e9ea;
+  --slate-200: rgb(29 31 32 / 16%);
+  --slate-300: #d4d4d7;
+  --slate-500: #7a7a7d;
+  --slate-600: rgb(29 31 32 / 72%);
+  --slate-700: #424244;
+  --slate-900: #1d1f20;
+  --violet-50: #eef6ff;
+  --violet-100: #d6ebff;
+  --violet-300: #b5d9fd;
+  --violet-500: #749dc4;
+  --violet-600: #5980a6;
+  --violet-700: #416180;
+  --teal-50: #f5f5f8;
+  --teal-500: #749dc4;
+  --teal-700: #416180;
+  --amber-50: #f5f5f8;
+  --amber-200: #d4d4d7;
+  --amber-700: #2c455d;
+  --rose-50: #f5f5f8;
+  --rose-600: #1d2d3d;
+
+  /* Spacing */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-14: 56px;
+  --space-18: 72px;
+
+  /* Radii */
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px; /* buttons, inputs, selects, segmented control */
+  --radius-lg: 12px; /* notice strips, bordered boxes, toast, logo mark */
+  --radius-xl: 16px; /* cards and panels */
+  --radius-2xl: 20px; /* drawer (left corners) */
+  --radius-pill: 999px;
+
+  /* Type */
+  --font-heading: 'Barlow Condensed', system-ui, sans-serif;
+  --font-body: 'Barlow', system-ui, sans-serif;
+  --font-sans: var(--font-body);
+  --font-heading-weight: 600;
+  --fs-hero: 84px;
+  --fs-display-l: 64px;
+  --fs-display-m: 60px;
+  --fs-display-s: 44px;
+  --fs-display-xs: 38px;
+  --fs-h1: 46px;
+  --fs-h2: 28px;
+  --fs-h3: 26px;
+  --fs-h4: 22px;
+  --fs-lede: 16px;
+  --fs-body: 15px;
+  --fs-ui: 14px;
+  --fs-label: 13px;
+  --fs-caption: 12px;
+  --fs-micro: 11px;
+
+  --duration-fast: 160ms;
+  --duration-drawer: 240ms;
+
+  /* Semantic (existing names) */
+  --background: var(--ground);
+  --surface: var(--card);
+  --surface-subtle: var(--ground);
+  --foreground: var(--ink);
+  --muted: rgb(29 31 32 / 72%);
+  --faint: rgb(29 31 32 / 70%);
+  --border: rgb(29 31 32 / 16%);
+  --divider: rgb(29 31 32 / 16%);
+  --divider-soft: rgb(29 31 32 / 10%);
+  --primary: var(--accent);
+  --primary-hover: var(--accent-600);
+  --primary-active: var(--accent-700);
+  --primary-text: var(--accent-700); /* links, eyebrows, ghost text (AA on #f2f2f3) */
+  --primary-soft: var(--accent-100);
+  --on-primary: var(--ground);
+  --chart-secondary: var(--accent-300);
+  --positive: var(--accent-700);
+  --positive-soft: var(--neutral-100);
+  --warning: var(--accent-900);
+  --warning-soft: var(--neutral-100);
+  --danger: var(--accent-900);
+  --danger-soft: var(--neutral-100);
+  --focus-ring: var(--accent);
+  --overlay: rgb(43 43 45 / 45%);
+  --hover-tint: color-mix(in srgb, var(--accent) 8%, transparent);
+  --selected-tint: color-mix(in srgb, var(--accent) 16%, transparent);
+  --shadow-sm: 0 1px 2px rgb(43 43 45 / 14%);
+  --shadow-md: 0 3px 10px rgb(43 43 45 / 16%);
+  --shadow-overlay: 0 12px 32px rgb(43 43 45 / 22%);
+
+  /* Component */
+  --panel-background: var(--card);
+  --panel-radius: var(--radius-xl);
+  --panel-padding: 26px 30px;
+  --control-height: 40px;
+  --control-radius: var(--radius-md);
+  --control-border: var(--divider);
+  --control-bg: var(--ground);
+  --button-bg: var(--primary);
+  --button-fg: var(--on-primary);
+  --page-max-width: 1320px;
+  --page-inset: var(--space-8);
+  --header-height: 68px;
+  --drawer-width: 580px;
+  --nav-pill-height: 38px;
+}
