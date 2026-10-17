@@ -124,7 +124,9 @@ test('downloads frozen JSON/CSV and produces a local report summary', async ({ p
   await closeDrawer(page);
   await page.getByRole('button', { name: 'Report summary', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('Basic summary');
-  await expect(page.locator('.summary-paragraph')).toContainText(`${seedMeasure.susceptibility_pct!.toFixed(1)}%`);
+  await expect(page.locator('.summary-paragraph')).toContainText(
+    `${seedMeasure.susceptibility_pct!.toFixed(1)}%`,
+  );
   await expect(page.locator('.summary-paragraph')).toContainText('not treatment efficacy');
 });
 

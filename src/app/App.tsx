@@ -176,7 +176,11 @@ function Workspace({
             {import.meta.env.VITE_DEMO_CONTROLS !== '1' && (
               <span className="synthetic-label">
                 <span />
-                {state.mode === 'feed' ? 'External feed' : 'Synthetic data'}
+                {DATA_MODE === 'standalone'
+                  ? 'Local demo'
+                  : state.mode === 'feed'
+                    ? 'External feed'
+                    : 'Synthetic data'}
               </span>
             )}
             <Button
@@ -347,7 +351,9 @@ function Workspace({
           <p>
             {DATA_MODE === 'fixtures'
               ? 'This preview uses authored fixtures for interface testing.'
-              : 'Evidence is requested from the published dataset API. Each export retains its original analysis snapshot.'}
+              : DATA_MODE === 'standalone'
+                ? 'This demo uses the bundled synthetic dataset. Lab batches and calculations run in this browser. Each export retains its original analysis snapshot.'
+                : 'Evidence is requested from the published dataset API. Each export retains its original analysis snapshot.'}
           </p>
           <p>
             The source contains synthetic microbiology samples. The report end date sets both
