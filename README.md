@@ -158,7 +158,7 @@ per client/minute and 40 provider requests per instance/minute. These counters
 reset on cold starts and are **not a global spending cap or authentication**.
 For a public demo, add a Vercel Firewall rate-limiting rule for POST requests to
 `/api/summarize` (for example, ten requests per minute per IP), and monitor API
-usage. Do not put a shared protection token in frontend source.
+usage. Do not put a shared protection token in frontend source. 
 
 On static hosts without Vercel Functions, a failed summary request uses the local
 template. Use `VITE_AI_SUMMARY=0` to avoid that request entirely. To develop with
