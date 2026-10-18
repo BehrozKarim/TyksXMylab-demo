@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Sparkles } from 'lucide-react';
 import { api, DATA_MODE } from '../api/client';
+import { LIVE_SUMMARIES } from '../api/live-summary';
 import type { Evidence, ReplayState } from '../api/contracts';
 import {
   Badge,
@@ -30,7 +31,8 @@ export function AiSummaryDrawer(props: Parameters<typeof AiSummaryPanel>[0]) {
           setOpen(true);
         }}
       >
-        <Sparkles size={17} /> {DATA_MODE === 'standalone' ? 'Report summary' : 'AI summary'}
+        <Sparkles size={17} />{' '}
+        {DATA_MODE === 'standalone' && !LIVE_SUMMARIES ? 'Report summary' : 'AI summary'}
       </Button>
       <Drawer
         open={open}
@@ -43,7 +45,9 @@ export function AiSummaryDrawer(props: Parameters<typeof AiSummaryPanel>[0]) {
             props.onEvidence(report);
           }
         }}
-        title={DATA_MODE === 'standalone' ? 'Report summary' : 'AI report summary'}
+        title={
+          DATA_MODE === 'standalone' && !LIVE_SUMMARIES ? 'Report summary' : 'AI report summary'
+        }
         description="An optional explanation of the selected report, with its supporting evidence."
       >
         <AiSummaryPanel
@@ -232,6 +236,25 @@ function ReportSummary({
           {summary.output_mode === 'template' && (
             <p className="small-note">
               A basic summary from the saved report is shown because AI generation is unavailable.
+              {DATA_MODE === 'standalone' &&
+                LIVE_SUMMARIES &&
+                summary.fallback_reason !== 'disabled' && (
+                  <>
+                    {' '}
+                    <Button
+                      disabled={create.isPending || older}
+                      onClick={() => {
+                        client.removeQueries({
+                          queryKey: ['summary-create', evidence.analysis_id],
+                          exact: true,
+                        });
+                        create.mutate();
+                      }}
+                    >
+                      Try AI again
+                    </Button>
+                  </>
+                )}
             </p>
           )}
           <p className="summary-paragraph">{summary.paragraph}</p>

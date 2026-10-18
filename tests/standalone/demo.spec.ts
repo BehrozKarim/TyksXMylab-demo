@@ -2,6 +2,7 @@ import { test, expect, type Page } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFile } from 'node:fs/promises';
 import reference from '../../src/test/reference-parity.json' with { type: 'json' };
+import { buildSummaryFacts, renderSummary, summaryRequestSchema } from '../../src/summary/facts';
 
 const seedMeasure = reference[0].windows.rolling_12_months;
 
@@ -13,13 +14,15 @@ test.beforeEach(async ({ page, context }) => {
   context.on('request', (request) => {
     const url = new URL(request.url());
     if (
-      url.pathname.startsWith('/api/') ||
+      (url.pathname.startsWith('/api/') && url.pathname !== '/api/summarize') ||
       url.pathname.startsWith('/__demo') ||
       (url.protocol.startsWith('http') && url.origin !== 'http://127.0.0.1:4175')
     )
       issues.push(`Unexpected network: ${url}`);
   });
-  await context.route('**/api/**', (route) => route.abort());
+  await context.route('**/api/**', (route) =>
+    route.request().url().endsWith('/api/summarize') ? route.continue() : route.abort(),
+  );
 });
 test.afterEach(async ({ page }) => {
   expect(errors.get(page)).toEqual([]);
@@ -75,6 +78,9 @@ test('publishes a real batch offline, updates chart and alerts, and preserves pr
   await expect(page.getByRole('dialog')).toContainText('revision 2');
   await closeDrawer(page);
   await expect(page.locator('.trend-freshness')).toContainText('revision 2');
+  await page.getByRole('button', { name: 'AI summary', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('Basic summary');
+  await closeDrawer(page);
   await expect(page.getByRole('link', { name: 'Resistance alerts', exact: false })).toContainText(
     '1',
   );
@@ -122,7 +128,7 @@ test('downloads frozen JSON/CSV and produces a local report summary', async ({ p
   await page.getByRole('button', { name: /Download CSV|CSV/ }).click();
   expect(await readFile((await (await csvDownload).path())!, 'utf8')).toContain('rolling_28_days');
   await closeDrawer(page);
-  await page.getByRole('button', { name: 'Report summary', exact: true }).click();
+  await page.getByRole('button', { name: 'AI summary', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('Basic summary');
   await expect(page.locator('.summary-paragraph')).toContainText(
     `${seedMeasure.susceptibility_pct!.toFixed(1)}%`,
@@ -137,6 +143,64 @@ test('searches synthetic patients and opens prior microbiology history', async (
   await page.locator('.patient-results button').first().click();
   await expect(page.locator('.history-context')).toContainText('Strict cutoff');
   await expect(page.getByRole('dialog')).not.toContainText('Could not load history');
+});
+
+test('generates an AI summary only on click and reuses it when the drawer reopens', async ({
+  page,
+}) => {
+  let calls = 0;
+  await page.route('**/api/summarize', async (route) => {
+    calls++;
+    const { report } = summaryRequestSchema.parse(route.request().postDataJSON());
+    const facts = buildSummaryFacts(report);
+    const summary = renderSummary(report, facts, {
+      choices: facts
+        .filter((f) => f.section === 'paragraph')
+        .map((f) => ({ fact_id: f.fact_id, variant: 1 })),
+      model: 'gpt-4.1-mini',
+    });
+    await route.fulfill({ json: summary });
+  });
+  await overview(page);
+  expect(calls).toBe(0);
+  await page.getByRole('button', { name: 'AI summary', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('AI-assisted summary');
+  await expect(page.locator('.summary-paragraph')).toContainText(
+    `${seedMeasure.susceptibility_pct!.toFixed(1)}%`,
+  );
+  expect(calls).toBe(1);
+  await closeDrawer(page);
+  await page.getByRole('button', { name: 'AI summary', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('AI-assisted summary');
+  expect(calls).toBe(1);
+});
+
+test('retains a basic summary when generation fails and allows an explicit AI retry', async ({
+  page,
+}) => {
+  let calls = 0;
+  await page.route('**/api/summarize', async (route) => {
+    if (++calls === 1) {
+      await route.fulfill({ status: 503, json: { error: 'unavailable' } });
+      return;
+    }
+    const { report } = summaryRequestSchema.parse(route.request().postDataJSON());
+    const facts = buildSummaryFacts(report);
+    await route.fulfill({
+      json: renderSummary(report, facts, {
+        choices: facts
+          .filter((f) => f.section === 'paragraph')
+          .map((f) => ({ fact_id: f.fact_id, variant: 0 })),
+        model: 'gpt-4.1-mini',
+      }),
+    });
+  });
+  await overview(page);
+  await page.getByRole('button', { name: 'AI summary', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('Basic summary');
+  await page.getByRole('button', { name: 'Try AI again', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('AI-assisted summary');
+  expect(calls).toBe(2);
 });
 
 test('keeps the copied layout accessible at desktop and mobile widths', async ({ page }) => {

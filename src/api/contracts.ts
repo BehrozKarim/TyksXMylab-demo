@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { optionalFeedProvenanceSchema } from './provenance';
+import { optionalFeedProvenanceSchema } from './provenance.js';
 
 export const windowKeys = ['annual', 'rolling_12m', 'last_28d'] as const;
 export type WindowKey = (typeof windowKeys)[number];

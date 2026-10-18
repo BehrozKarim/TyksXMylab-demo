@@ -1,7 +1,9 @@
 # Ward Evidence — standalone demo
 
-Independent copy of the current Ward Evidence frontend. The complete demonstration
-runs as a static website: no Render backend, PostgreSQL, Python service or API key.
+Independent copy of the current Ward Evidence frontend. The dashboard and lab-feed
+demonstration run as a static website, with no Render backend, PostgreSQL or Python
+service. Live AI summaries use an optional Vercel Function; the local summary
+fallback works without an API key or network connection after the dataset loads.
 The original frontend and backend repositories are unchanged.
 
 ## Run
@@ -48,8 +50,9 @@ not send a network request, modify source records or deliver data to a laborator
 - Patient search and paginated history, including negative and mixed-growth cultures.
 - Precomputed resistance alerts, investigation composition, original detections and transitions.
 - JSON/CSV snapshot downloads, retaining opened reports across later publications.
-- **Report summary**, a deterministic local template based on the selected report.
-  It is labelled as a basic summary; no live AI model is called.
+- **AI summary** on production builds: optional live OpenAI-assisted wording of
+  the selected report, with a basic local summary when AI is unavailable. Local
+  Vite development uses the basic summary by default.
 
 ## Data and calculations
 
@@ -103,26 +106,64 @@ is required; opening `index.html` using `file://` is unsupported.
 The data download is public by design. This architecture is for synthetic
 demonstrations and must not be populated with real patient records.
 
-## Optional live AI summaries
+## Enable AI summaries on Vercel
 
-The current summary is a local template and works offline. For live generation,
-add a same-origin Vercel Function such as `api/summarize.ts`. The browser sends
-only the selected report's aggregate facts and snapshot identity to that function;
-the function validates those facts, calls OpenAI and returns the summary tagged
-with the same report identity. Dataset filtering, charts and lab batches can
-continue to run entirely in the browser; no PostgreSQL or separate Render backend
-is needed for this approach.
+1. Open this project's **Settings → Environment Variables**.
+2. Add **`OPENAI_API_KEY`** with your OpenAI API project key. Select **Production**
+   and also **Preview** if you want AI in preview deployments. Use an OpenAI API
+   project with API billing/credits available. Never prefix the key with `VITE_`.
+3. Optionally add **`OPENAI_SUMMARY_MODEL=gpt-4.1-mini`**. This is already the
+   default; the model must support the Responses API and strict structured output.
+4. Deploy the latest `main` commit. If it already deployed before you saved the
+   environment variable, use **Deployments → latest deployment → Redeploy**.
+5. Open `/ward` and click **AI summary**. Successful generation displays
+   **AI-assisted summary**. A missing key, provider error or offline browser
+   displays **Basic summary** instead, with **Try AI again** when appropriate.
 
-Set `OPENAI_API_KEY` as a server-side Vercel environment variable. Never prefix
-it with `VITE_` or place it in frontend source. Keep the local template as a fallback,
-cache results by the full report content and method version, and limit requests
-before exposing a publicly callable model endpoint. A local analysis ID alone
-is not enough for that function: it cannot access the browser worker's saved reports.
-AI text should explain the calculated values rather than calculate new statistics.
+The included `api/summarize.ts` is deployed automatically as a Node.js Vercel
+Function. Leave the framework preset **Vite**, build command `npm run build` and
+output directory `dist`. No separate backend URL, database, CORS configuration
+or additional frontend secret is needed. These instructions do not require
+changing your existing deployment's environment variables other than the key.
 
-For a strictly static alternative, generate summaries in advance for a finite set
-of cohorts and batch stages and bundle them with the demo. That avoids live API
-calls but cannot cover arbitrary age/date/filter combinations without a fallback.
+Optional switches:
+
+| Variable               | Purpose                                                                  |
+| ---------------------- | ------------------------------------------------------------------------ |
+| `OPENAI_API_KEY`       | Required server-only key for live generation.                            |
+| `OPENAI_SUMMARY_MODEL` | Server-only model choice; defaults to `gpt-4.1-mini`.                    |
+| `AI_SUMMARY_ENABLED=0` | Disable provider calls while retaining the basic summary.                |
+| `VITE_AI_SUMMARY=0`    | Build a strictly static client that never requests the summary function. |
+
+Live requests are enabled automatically in production builds. They happen only
+after a summary action, never during dashboard loading or lab-batch publication.
+The frontend sends aggregate windows, applied filters and the exact report
+identity; no patient records or entire dataset are sent. The server validates
+counts, percentages, dates and reporting suppression, then asks OpenAI to select
+approved sentence variants, following the original backend's summary approach.
+Unknown facts, extra claims, refusals and incomplete output fall back to the basic
+summary. The model does not calculate statistics or choose treatments.
+
+The server key is read from `process.env` and is never returned to the browser.
+Responses use `Cache-Control: no-store` to avoid sharing report identity through
+the CDN. A bounded in-memory cache reuses successful wording for identical report
+content, revision and model for ten minutes, then attaches each caller's own
+analysis ID. Concurrent identical requests share work. This cache is per warm
+function instance, not a persistent or globally shared database.
+
+The function has a 20-second provider timeout, a 30-second execution limit,
+bounded request size, same-origin browser checks, at most three simultaneous
+provider requests per instance and best-effort in-memory limits of 20 requests
+per client/minute and 40 provider requests per instance/minute. These counters
+reset on cold starts and are **not a global spending cap or authentication**.
+For a public demo, add a Vercel Firewall rate-limiting rule for POST requests to
+`/api/summarize` (for example, ten requests per minute per IP), and monitor API
+usage. Do not put a shared protection token in frontend source.
+
+On static hosts without Vercel Functions, a failed summary request uses the local
+template. Use `VITE_AI_SUMMARY=0` to avoid that request entirely. To develop with
+the actual function locally, use Vercel CLI's `vercel dev`; ordinary `npm run dev`
+continues to run the local demo without needing credentials.
 
 ## Verification
 
@@ -134,12 +175,20 @@ npm run test:e2e
 ```
 
 Standalone browser tests run against the production build and block every API
-request. They cover feed publication/completion/reset, refresh persistence,
+request except the optional summary endpoint. They cover feed publication/completion/reset, refresh persistence,
 filtering, history, exports, summaries, alerts and desktop/mobile rendering.
+The summary function and browser client are tested with mocked OpenAI responses;
+tests do not make paid API calls. They cover key absence, invalid input, timeouts,
+provider failures/refusals, safe sentence validation, caching, explicit retries,
+report identity, per-client limiting and offline fallback.
 The copied fixture browser suite remains available with `npm run test:fixtures`.
 Historical design notes and fixture tests are retained from the source frontend.
 
-Verified on 18 October 2026: production build and lint pass, **95 unit tests**
-and **6 standalone production-browser tests** pass. The browser suite includes
+The production build also type-checks function dependencies with Node's ESM
+module-resolution rules. The browser suite includes
 an actual offline batch publication and WCAG A/AA checks at desktop width, plus
 mobile overflow and feed-control visibility checks.
+
+Verified on 18 October 2026: **119 unit tests**, **8 production-browser tests**,
+production build, Node ESM function smoke check and lint pass. OpenAI responses
+were mocked; live generation is enabled by your Vercel API key configuration.

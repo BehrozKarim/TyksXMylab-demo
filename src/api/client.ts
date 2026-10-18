@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { localRequest, LocalRequestError } from '../demo/transport';
+import { createStandaloneSummary, getStandaloneSummary } from './live-summary';
 import {
   alertsSchema,
   comparisonSchema,
@@ -121,20 +122,21 @@ function cohortParams(q: CohortQuery) {
 }
 export const api = {
   async summarize(evidence: Evidence, signal?: AbortSignal) {
-    const summary = await request('/ai/summaries', summarySchema, {}, signal, 'POST', {
-      analysis_id: evidence.analysis_id,
-      language: 'en',
-    });
+    const summary =
+      DATA_MODE === 'standalone'
+        ? await createStandaloneSummary(evidence, signal)
+        : await request('/ai/summaries', summarySchema, {}, signal, 'POST', {
+            analysis_id: evidence.analysis_id,
+            language: 'en',
+          });
     assertSummary(summary, evidence);
     return summary;
   },
   async summary(id: string, evidence: Evidence, signal?: AbortSignal) {
-    const summary = await request(
-      `/ai/summaries/${encodeURIComponent(id)}`,
-      summarySchema,
-      {},
-      signal,
-    );
+    const summary =
+      DATA_MODE === 'standalone'
+        ? await getStandaloneSummary(id, evidence, signal)
+        : await request(`/ai/summaries/${encodeURIComponent(id)}`, summarySchema, {}, signal);
     assertSummary(summary, evidence);
     if (summary.summary_id !== id)
       throw new ApiError('The response belongs to a different summary.', 502, 'invalid_context');

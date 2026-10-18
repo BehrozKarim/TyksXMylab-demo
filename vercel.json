@@ -3,6 +3,9 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "functions": {
+    "api/summarize.ts": { "maxDuration": 30 }
+  },
   "rewrites": [
     { "source": "/ward/:path*", "destination": "/index.html" },
     { "source": "/investigate/:path*", "destination": "/index.html" },
