@@ -118,7 +118,7 @@ demonstrations and must not be populated with real patient records.
    environment variable, use **Deployments → latest deployment → Redeploy**.
 5. Open `/ward` and click **AI summary**. Successful generation displays
    **AI-assisted summary**. A missing key, provider error or offline browser
-   displays **Basic summary** instead, with **Try AI again** when appropriate.
+   displays **Basic summary** instead, without a failure notice or retry button.
 
 The included `api/summarize.ts` is deployed automatically as a Node.js Vercel
 Function. Leave the framework preset **Vite**, build command `npm run build` and

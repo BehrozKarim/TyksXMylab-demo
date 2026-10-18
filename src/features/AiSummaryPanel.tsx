@@ -233,30 +233,6 @@ function ReportSummary({
               Report through {summary.as_of} · revision {summary.state_revision}
             </span>
           </div>
-          {summary.output_mode === 'template' && (
-            <p className="small-note">
-              A basic summary from the saved report is shown because AI generation is unavailable.
-              {DATA_MODE === 'standalone' &&
-                LIVE_SUMMARIES &&
-                summary.fallback_reason !== 'disabled' && (
-                  <>
-                    {' '}
-                    <Button
-                      disabled={create.isPending || older}
-                      onClick={() => {
-                        client.removeQueries({
-                          queryKey: ['summary-create', evidence.analysis_id],
-                          exact: true,
-                        });
-                        create.mutate();
-                      }}
-                    >
-                      Try AI again
-                    </Button>
-                  </>
-                )}
-            </p>
-          )}
           <p className="summary-paragraph">{summary.paragraph}</p>
           {summary.limitations.length > 0 && (
             <div className="summary-limitations">

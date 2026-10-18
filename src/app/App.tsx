@@ -173,14 +173,10 @@ function Workspace({
           </nav>
           <div className="app-header-right">
             <DemoControls state={state} />
-            {import.meta.env.VITE_DEMO_CONTROLS !== '1' && (
+            {DATA_MODE !== 'standalone' && import.meta.env.VITE_DEMO_CONTROLS !== '1' && (
               <span className="synthetic-label">
                 <span />
-                {DATA_MODE === 'standalone'
-                  ? 'Local demo'
-                  : state.mode === 'feed'
-                    ? 'External feed'
-                    : 'Synthetic data'}
+                {state.mode === 'feed' ? 'External feed' : 'Synthetic data'}
               </span>
             )}
             <Button

@@ -175,32 +175,23 @@ test('generates an AI summary only on click and reuses it when the drawer reopen
   expect(calls).toBe(1);
 });
 
-test('retains a basic summary when generation fails and allows an explicit AI retry', async ({
+test('shows the saved summary without a failure notice when AI generation fails', async ({
   page,
 }) => {
   let calls = 0;
   await page.route('**/api/summarize', async (route) => {
-    if (++calls === 1) {
-      await route.fulfill({ status: 503, json: { error: 'unavailable' } });
-      return;
-    }
-    const { report } = summaryRequestSchema.parse(route.request().postDataJSON());
-    const facts = buildSummaryFacts(report);
-    await route.fulfill({
-      json: renderSummary(report, facts, {
-        choices: facts
-          .filter((f) => f.section === 'paragraph')
-          .map((f) => ({ fact_id: f.fact_id, variant: 0 })),
-        model: 'gpt-4.1-mini',
-      }),
-    });
+    calls++;
+    await route.fulfill({ status: 503, json: { error: 'unavailable' } });
   });
   await overview(page);
   await page.getByRole('button', { name: 'AI summary', exact: true }).click();
   await expect(page.getByRole('dialog')).toContainText('Basic summary');
-  await page.getByRole('button', { name: 'Try AI again', exact: true }).click();
-  await expect(page.getByRole('dialog')).toContainText('AI-assisted summary');
-  expect(calls).toBe(2);
+  await expect(page.locator('.summary-paragraph')).toContainText(
+    `${seedMeasure.susceptibility_pct!.toFixed(1)}%`,
+  );
+  await expect(page.getByRole('dialog')).not.toContainText('AI generation is unavailable');
+  await expect(page.getByRole('button', { name: 'Try AI again', exact: true })).toHaveCount(0);
+  expect(calls).toBe(1);
 });
 
 test('keeps the copied layout accessible at desktop and mobile widths', async ({ page }) => {
