@@ -86,6 +86,15 @@ Deploy this repository as a **static site** using the included `render.yaml`:
 - No API URL, database, secrets or paid backend instance.
 - Rewrite application routes to `/index.html`.
 
+For **Vercel**, import this repository with framework preset **Vite**, build
+command `npm run build`, output directory `dist` and the repository root as the
+Root Directory. The included `vercel.json` rewrites `/ward`, `/investigate` and
+`/alerts` (including nested investigation URLs) to `index.html`, allowing React
+Router to handle direct links and page refreshes. Assets, dataset files and future
+`/api/*` functions keep their own routes. Vercel does not use `public/_redirects`
+or `render.yaml` for this configuration. Redeploy after adding the configuration.
+The large-JavaScript-chunk build warning is an optimization notice, not a route error.
+
 Cloudflare Pages and Netlify can use the same build command and output directory;
 `public/_redirects` supplies the SPA fallback. Deploy at the domain root. Keep HTTP
 compression enabled and allow Web Workers from the same origin. HTTP/HTTPS hosting
@@ -93,6 +102,27 @@ is required; opening `index.html` using `file://` is unsupported.
 
 The data download is public by design. This architecture is for synthetic
 demonstrations and must not be populated with real patient records.
+
+## Optional live AI summaries
+
+The current summary is a local template and works offline. For live generation,
+add a same-origin Vercel Function such as `api/summarize.ts`. The browser sends
+only the selected report's aggregate facts and snapshot identity to that function;
+the function validates those facts, calls OpenAI and returns the summary tagged
+with the same report identity. Dataset filtering, charts and lab batches can
+continue to run entirely in the browser; no PostgreSQL or separate Render backend
+is needed for this approach.
+
+Set `OPENAI_API_KEY` as a server-side Vercel environment variable. Never prefix
+it with `VITE_` or place it in frontend source. Keep the local template as a fallback,
+cache results by the full report content and method version, and limit requests
+before exposing a publicly callable model endpoint. A local analysis ID alone
+is not enough for that function: it cannot access the browser worker's saved reports.
+AI text should explain the calculated values rather than calculate new statistics.
+
+For a strictly static alternative, generate summaries in advance for a finite set
+of cohorts and batch stages and bundle them with the demo. That avoids live API
+calls but cannot cover arbitrary age/date/filter combinations without a fallback.
 
 ## Verification
 
